@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Repository
@@ -35,25 +36,16 @@ public class UserDaoImp implements UserDao {
       sessionFactory.getCurrentSession().update(user);
    }
 
+   @Transactional
    @Override
    public User getUserByCar(String model, int series) {
-      User user = null;
-      Transaction transaction = null;
-      try (Session session = sessionFactory.openSession()) {
-         transaction = session.beginTransaction();
-         String hql = "SELECT u FROM User u JOIN u.car c WHERE c.model = :model AND c.series = :series";
-         user = (User) session.createQuery(hql)
+      String hql = "SELECT u FROM User u JOIN u.car c WHERE c.model = :model AND c.series = :series";
+      try (Session session = sessionFactory.getCurrentSession()) {
+         return (User) session.createQuery(hql)
                  .setParameter("model", model)
                  .setParameter("series", series)
                  .uniqueResult(); // Метод uniqueResult() возвращает единственный результат или null
-         transaction.commit();
-      } catch (Exception e) {
-         if (transaction != null) {
-            transaction.rollback();
-         }
-         e.printStackTrace();
       }
-      return user;
    }
 
 }
